@@ -1,0 +1,71 @@
+##############################################################################
+#
+# Name:   pyez-6
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script pull out ospf neighbor in Full state and compare that against interface configured with ospf.  
+#              If both of these count mismatch then appropriate message is printed by the script.
+# 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+from jnpr.junos import Device
+import jxmlease
+import getpass
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass() 
+
+
+   
+with Device(host=hostname, user=username, password=password,timeout=300) as dev:
+    dev.timeout = 900
+    dev.open()
+    parser = jxmlease.EtreeParser()
+    full_count = 0
+    res = parser(dev.rpc.get_ospf_neighbor_information())
+    #print(res)
+    for neighbor in res['ospf-neighbor-information']['ospf-neighbor']:
+       if neighbor['ospf-neighbor-state'] == 'Full':
+          full_count += 1
+    print("Found", full_count, "OSPF neighbor in Full state")
+    
+    res1 = parser(dev.rpc.get_ospf_interface_information())
+    #print(res1)
+    interface_count = 0
+    for interface in res1['ospf-interface-information']['ospf-interface']:
+       if interface['interface-name'] != 'xyz':
+          interface_count += 1
+    print("Found",interface_count,"interface configured with OSPF")
+    
+    if interface_count > full_count:
+       print("Router has", interface_count, "interfaces with ospf configuration however Full state neighborship is only on", full_count, "interfaces")
+	   
+    if interface_count == full_count:
+       print("Both configured interface and ospf neighbor in Full state matches")
+
+
+
+
+
+
+    
+
+
+
+
+

@@ -1,0 +1,83 @@
+##############################################################################
+#
+# Name:   pyez-14
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script perform cost-in operation of an ae bundle on two routers at the same time.
+# 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+
+
+from jnpr.junos import Device
+from pprint import pprint
+from jnpr.junos.utils.config import Config
+from jnpr.junos.exception import *
+import argparse
+import time
+import multiprocessing
+import getpass
+import jxmlease
+
+"""
+hostname1=input("Enter router name of first router:  ") 
+hostname2=input("Enter router name of second router:  ")
+ae_bundle=input("Enter name of ae bundle to be costed out:  ")
+area_id = input("Enter area id:  ")
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+DEVICES = [hostname1, hostname2]
+"""
+
+NUM_PROCESSES = 2
+
+ae_bundle = 'ae10.0'
+DEVICES = ['10.85.174.204', '10.85.174.199']
+area_id = '0.0.101.5'
+
+def cost_out(host): 
+    try:
+        with Device(host=host, user='xxxx', password='xxxx') as dev:
+          with Config(dev, mode='exclusive') as conf:
+            # exclusive locks are treated automatically by context manager
+            conf.load('set protocols ospf area {} interface {} metric 10000'.format(area_id,ae_bundle), format='set', merge=True)
+            #print(STR_PDIFF_BANNER)
+            conf.pdiff()
+            conf.commit()
+    except LockError:
+        pprint('Error applying config: configuration was locked')
+    except ConnectRefusedError:
+        print('Error: Device connection refused')
+    except ConnectTimeoutError:
+        print('Error: Device connection timed out')
+    except ConnectAuthError:
+        print('Error: Authentication failure')
+    except ConfigLoadError as ex:
+        print('Error: ' + str(ex))
+    else: 
+        print('Config committed successfully on', host) 
+
+def main(): # (7)
+ time_start = time.time()
+ with multiprocessing.Pool(processes=NUM_PROCESSES) as process_pool: 
+  process_pool.map(cost_out, DEVICES) 
+  process_pool.close() 
+  process_pool.join()
+ print("Finished in %f sec." % (time.time() - time_start)) 
+
+if __name__ == "__main__": # (12)
+ main()

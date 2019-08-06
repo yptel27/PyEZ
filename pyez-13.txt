@@ -1,0 +1,153 @@
+##############################################################################
+#
+# Name:   pyez-13
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script pull various rpc calls to pull out various operanation and troubleshooting info from the router.
+#              It is just proto-type which needs to be modified to suit the production needs
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+from jnpr.junos import Device
+from jnpr.junos.utils.start_shell import StartShell
+from lxml import etree
+import getpass
+
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+
+dev = Device(host=hostname, user=username, password=password,timeout=300)
+dev.open()
+
+
+num = 0
+fpc_data = {}
+fpc = dev.rpc.get_pic_information()
+
+print("                                    ")
+
+for x in fpc.xpath('//fpc'):
+    if x.xpath('./state')[0].text.strip() == 'Online':
+        fpc_slot = int(x.xpath('./slot')[0].text.strip())
+        fpc_type = x.xpath('./description')[0].text.strip()
+        fpc_data[fpc_slot] = fpc_type
+        num = num + 1
+print("FPC slot and model info:", fpc_data)
+
+print("                                    ")
+
+Up_Intf_list=[]
+i = dev.rpc.get_interface_information(terse=True)
+for x in i.xpath('//physical-interface'):
+    if "up" in x.xpath('./admin-status')[0].text:
+        if "ge" in x.xpath('./name')[0].text or "xe" in x.xpath('./name')[0].text or "ae" in x.xpath('./name')[0].text:
+           name=x.xpath('./name')[0].text
+           Up_Intf_list.append(name.strip())
+print("Interfaces in up state: ", Up_Intf_list)
+
+print("                                    ")
+
+Down_Intf_list=[]
+d = dev.rpc.get_interface_information(terse=True)
+for x in d.xpath('//physical-interface'):
+    if "down" in x.xpath('./oper-status')[0].text:
+        name=x.xpath('./name')[0].text
+        Down_Intf_list.append(name.strip())
+print("Interface in down state: ", Down_Intf_list)
+
+print("                                    ")
+
+Chassis_hardware_list=[]
+e= dev.rpc.get_chassis_inventory()
+for x in e.xpath('.//chassis/chassis-module'):
+    name=x.xpath('./description')[0].text
+    Chassis_hardware_list.append(name.strip())
+print("Chassis hardware list", Chassis_hardware_list)
+
+print("                                    ")
+
+bgp_neighbor=[]
+d = dev.rpc.get_bgp_summary_information()
+for x in d.xpath('//bgp-information/bgp-peer'):
+    name=x.xpath('./peer-address')[0].text
+    name1=x.xpath('./peer-state')[0].text
+    name2=x.xpath('./elapsed-time')[0].text
+    bgp_neighbor.append(name.strip())
+    bgp_neighbor.append(name1.strip())
+    bgp_neighbor.append(name2.strip())
+print("BGP neighbor: ", bgp_neighbor)
+
+print("                                    ")
+
+ospf_neighbor=[]
+f = dev.rpc.get_ospf_neighbor_information(detail=True)
+for x in f.xpath('//ospf-neighbor'):
+    name=x.xpath('./neighbor-address')[0].text
+    name1=x.xpath('./ospf-neighbor-state')[0].text
+    name2=x.xpath('./neighbor-up-time')[0].text
+    ospf_neighbor.append(name.strip())
+    ospf_neighbor.append(name1.strip())
+    ospf_neighbor.append(name2.strip())
+print("OSPF neighbor: ", ospf_neighbor)
+
+print("                                    ")
+
+alarm_count=[]
+g = dev.rpc.get_alarm_information()
+for x in g.xpath('//alarm-information/alarm-summary'):
+   name =x.xpath('./active-alarm-count')[0].text
+   alarm_count.append(name.strip())
+print("Number of active alarm on chassis: ", alarm_count)
+
+print("                                    ")
+
+alarm_summary=[]
+y = dev.rpc.get_alarm_information()
+for x in y.xpath('//alarm-information/alarm-detail'):
+   name=x.xpath('./alarm-class')[0].text
+   name1=x.xpath('./alarm-description')[0].text
+   alarm_summary.append(name.strip())
+   alarm_summary.append(name1.strip())
+print("Alarm-Summary: ", alarm_summary)
+
+print("                                    ")
+
+pfe_drops=[]
+h = dev.rpc.get_pfe_statistics()
+for x in h.xpath('//pfe-statistics/pfe-local-traffic-statistics'):
+    name=x.xpath('./software-input-control-drops')[0].text
+    pfe_drops.append('software-input-control-drops')
+    pfe_drops.append(name.strip())
+    name1=x.xpath('./hardware-input-drops')[0].text
+    pfe_drops.append('hardware-input-control-drops')
+    pfe_drops.append(name1.strip())
+print("pfe_drops: ", pfe_drops)
+
+print("                                    ")
+
+pfe_discards=[]
+h = dev.rpc.get_pfe_statistics()
+for x in h.xpath('//pfe-statistics/pfe-hardware-discard-statistics'):
+    name=x.xpath('./bad-route-discard')[0].text
+    pfe_discards.append('bad-route-discard')
+    pfe_discards.append(name.strip())
+    name1=x.xpath('./fabric-discard')[0].text
+    pfe_discards.append('fabric-discard')
+    pfe_discards.append(name1.strip())
+print("pfe_discards: ", pfe_discards)
+

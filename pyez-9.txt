@@ -1,0 +1,60 @@
+##############################################################################
+#
+# Name:   pyez-9
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script demonstrate utils.config module of junos along with exception module.
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+
+from jnpr.junos import Device
+from pprint import pprint
+from jnpr.junos.utils.config import Config
+from jnpr.junos.exception import *
+import time
+import getpass
+
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+
+
+time_start = time.time()
+try:
+    with Device(host=hostname, user=username, password=password,timeout=300) as dev:
+        with Config(dev) as conf:
+            # exclusive locks are treated automatically by context manager
+            #conf.load('set protocols ospf area 0.0.101.5 interface ae11.0 metric 12000', format='set', merge=True)
+            #print(STR_PDIFF_BANNER)
+            #conf.pdiff()
+            #conf.commit_check()
+            #conf.commit()
+            conf.rollback()
+            #conf.unlock()
+except LockError:
+        pprint('Error applying config: configuration was locked')
+except ConnectRefusedError:
+        print('Error: Device connection refused')
+except ConnectTimeoutError:
+        print('Error: Device connection timed out')
+except ConnectAuthError:
+        print('Error: Authentication failure')
+except ConfigLoadError as ex:
+        print('Error: ' + str(ex))
+else: 
+        print('Config committed successfully') 

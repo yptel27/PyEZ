@@ -1,0 +1,74 @@
+##############################################################################
+#
+# Name:   pyez-10
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script perform shell data collection(given list of command) from fpc of a router at 30 second interval.
+#              It is a proto-type which needs to be modified to suit the production needs.
+# 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+from jnpr.junos import Device
+from pprint import pprint
+from jnpr.junos.utils.config import Config
+from jnpr.junos.exception import *
+import argparse
+from jnpr.junos.utils.start_shell import StartShell
+import time
+start_time = time.time()
+import getpass
+
+fpc_numbers=[0]
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+
+command_list = ['cprod -A fpc{} -c "show route summary"', 'cprod -A fpc{} -c "show nhdb summary"']
+
+DEV = Device(host=hostname, user=username, password=password,timeout=300)
+ss = StartShell(DEV)
+ss.open()
+DEV.open()
+pprint(ss.run('cli -c "set cli timestamp"'))
+
+"""
+with open('command_list.txt') as temp_file:
+  command_list = [line.rstrip('\n') for line in temp_file]
+"""
+
+for fpc_number in fpc_numbers:
+    f = open("output1_fpc.txt","w+")
+    for command in command_list:
+       test1 = str(ss.run(command.format(fpc_number)))
+       f.write(command)
+       f.write(test1)
+
+print("Completed first iteration of data collection")
+print("Now waiting for 30 seconds")
+time.sleep(30)
+
+for fpc_number in fpc_numbers:
+    f = open("output2_fpc.txt","w+") 
+    for command in command_list:
+       test2 = str(ss.run(command.format(fpc_number)))
+       f.write(command)
+       f.write(test2)
+
+print("Completed second iteration of data collection")
+
+ss.close()
+DEV.close()

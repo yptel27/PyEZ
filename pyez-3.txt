@@ -1,0 +1,88 @@
+##############################################################################
+#
+# Name:   pyez-3
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script compare increment in interface error counters during user provided monitoring period.  
+#               It compares two succesive data collection and provides name and value of the incremented counters.
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+ 
+
+from jnpr.junos import Device
+from pprint import pprint
+from jnpr.junos.op.phyport import PhyPortErrorTable
+import getpass
+import sys
+import time
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass() 
+
+Monitoring_interval=input("Enter monitoring interval in seconds:  ")
+
+Monitor = int(Monitoring_interval)
+    
+with Device(host=hostname, user=username, password=password,timeout=300) as dev:
+    dev.timeout = 900
+    Phy1 = PhyPortErrorTable(dev)
+    Phy1.get(interface_name='ge-0/0/1') # To retrieve the table item for the ge-0/0/1
+    #pprint (Phy1.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    Phy1_values= (Phy1.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(Phy1_values)
+    pprint("First time collection of the output by the script")
+    pprint (Phy1.items())  # To view the complete list of items, including both keys and values, call the items() method.
+
+print("Now script is sleeping for", Monitor, "seconds")
+time.sleep(Monitor)
+
+with Device(host=hostname, user=username, password=password,timeout=300) as dev:
+    dev.timeout = 900
+    Phy2 = PhyPortErrorTable(dev)
+    Phy2.get(interface_name='ge-0/0/1') # To retrieve the table item for the ge-0/0/1
+    #pprint (Phy2.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    Phy2_values= (Phy2.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(Phy2_values)
+    pprint("Second time collection of the output by the script")
+    pprint (Phy2.items())  # To view the complete list of items, including both keys and values, call the items() method.
+    
+flat_list1 = []
+
+print("Now comparing two outputs")
+
+for sublist in Phy1_values:
+    for item in sublist:
+        flat_list1.append(item)
+		
+flat_list2 = []
+for sublist in Phy2_values:
+    for item in sublist:
+        flat_list2.append(item)
+
+
+for (x,y) in flat_list1:
+     for (a,b) in flat_list2:
+        if x == a:
+             if y != b:
+                print("MisMatch : ", x, y, a, b)
+             else:
+                print("Match : ")
+
+
+
+
+

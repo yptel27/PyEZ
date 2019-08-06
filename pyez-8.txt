@@ -1,0 +1,183 @@
+##############################################################################
+#
+# Name:   pyez-8
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script pull out ae bundles over which ospf neighbor in Full state. Then it pulls out
+#               physical child links associated with ae bundles. It then takes two error count snapshots few second apart
+#               from each of those interfaces and report back if they are getting incremented or not.
+# 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+ 
+
+from jnpr.junos import Device
+import jxmlease
+import re
+from pprint import pprint
+from datetime import datetime 
+from jnpr.junos.op.ospf import OspfNeighborTable
+from jnpr.junos.op.phyport import PhyPortErrorTable
+from jnpr.junos.op.phyport import PhyPortStatsTable
+from jnpr.junos.utils.start_shell import StartShell
+import getpass
+import time
+
+
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+
+
+#Device details
+DEV = Device(host=hostname, user=username, password=password,timeout=300)    
+
+
+#Start time of the program
+start_time = datetime.now()
+
+INTF = []
+INTF_PHY = []
+Command_List = []
+INTF_PHY_LIST = []
+
+Output1_List = []
+Output2_List = []
+Unmatched = []
+
+Monitor = 10
+
+def check_ospf_full_adjacencies(dev): # (4) 
+  ospf_table = OspfNeighborTable(dev) # Create an instance of the Table 
+  ospf_table.get() # Populate the Table
+  for interface in ospf_table:
+    x = interface['interface_name'] 
+    INTF.append(x)
+    #pprint (ospf_table.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    #pprint (ospf_table.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint (ospf_table.items())  # To view the complete list of items, including both keys and values, call the items() method.    
+
+
+def Command_Gen(INTF):
+   for interface in INTF:
+     z = 'show interfaces {} extensive'.format(interface)
+     Command_List.append(z)
+     #pprint (Command_List)
+
+def phy_intf(Command_Gen):
+   for command in Command_List:
+     ss = StartShell(DEV)
+     ss.open()
+     test = str((ss.run('cli -c "{} | find Marker | match xe"'.format(command))))
+     a= re.findall('xe-.....', test)
+     pprint(a)
+     INTF_PHY.append(a)
+     #pprint(INTF_PHY)
+     
+def FLAT_LIST():
+   for sublist in INTF_PHY:
+      for item in sublist:
+         INTF_PHY_LIST.append(item)
+         #pprint(INTF_PHY_LIST)
+
+def check_interface_drops1(dev,List): # (4) 
+  interface_table = PhyPortErrorTable(dev) # Create an instance of the Table 
+  #interface_table.get() # Populate the Table
+  pprint(INTF_PHY_LIST)
+  for interface in INTF_PHY_LIST:
+    output = (interface_table.get(interface_name=interface))
+    Output1_List.append(output[:])
+  return Output1_List
+  
+def check_interface_drops2(dev,List): # (4) 
+  interface_table = PhyPortErrorTable(dev) # Create an instance of the Table 
+  #interface_table.get() # Populate the Table
+  for interface in INTF_PHY_LIST:
+    output = (interface_table.get(interface_name=interface))
+    Output2_List.append(output[:])
+  return Output2_List
+
+def main(): # 
+  with Device(host="10.85.174.205", user='xxxxx', password='xxxxx', timeout = 1800) as dev:
+     result1 = check_ospf_full_adjacencies(dev)
+     #print(INTF)  
+     #pprint(ospf_table.items())
+     
+     #result3 = check_phy_interface_drops(dev,INTF)
+     result5 = Command_Gen(INTF)
+     result4 = phy_intf(Command_Gen)
+     #result6 = FLAT_LIST
+     for sublist in INTF_PHY:
+        for item in sublist:
+          INTF_PHY_LIST.append(item)
+          #pprint(INTF_PHY_LIST)
+     result2 = check_interface_drops1(dev,INTF_PHY_LIST)
+     pprint(type(result2))
+     #pprint(result2)
+     Phy1_values = result2
+     time.sleep(Monitor)
+     result7 = check_interface_drops2(dev,INTF_PHY_LIST)
+     #pprint(result7.keys())
+     Phy2_values = result7
+     flat_list1 = []
+     for sublist in Phy1_values:
+        for item in sublist:
+          flat_list1.append(item)
+     for f in range(len(flat_list1)):
+        #pprint(flat_list1[f])
+
+     #pprint(flat_list1[1].keys())
+     #pprint(flat_list1[1].values())      
+
+     
+     flat_list2 = []
+     for sublist in Phy2_values:
+        for item in sublist:
+          flat_list2.append(item)
+
+	 
+     
+     for d1, d2 in zip(flat_list1, flat_list2):
+        pprint(d1)
+        for key, value in d1.items():
+           if value != d2[key]:
+              print(key, value, d2[key])
+
+
+  #Calculate Total program time
+  end_time = datetime.now()
+  total_time = end_time - start_time 
+  print ("Completed processing in", total_time, "seconds")
+
+if __name__ == '__main__': # (8)
+  main()
+
+    
+
+
+
+
+
+
+
+    
+
+
+
+
+

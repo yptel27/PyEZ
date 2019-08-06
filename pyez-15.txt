@@ -1,0 +1,111 @@
+##############################################################################
+#
+# Name:   pyez-15
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script pull various pyez tables and views to pull out various operanation and troubleshooting info from the router.
+#              It is just proto-type which needs to be modified to suit the production needs
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+from jnpr.junos import Device
+from pprint import pprint
+from jnpr.junos.op.arp import ArpTable
+from jnpr.junos.op.bgp import bgpTable
+from jnpr.junos.op.inventory import ModuleTable
+from jnpr.junos.op.l2circuit import L2CircuitConnectionTable
+from jnpr.junos.op.ldp import LdpNeighborTable
+from jnpr.junos.op.routes import RouteSummaryTable
+from jnpr.junos.op.fpc import FpcHwTable
+from jnpr.junos.op.teddb import TedTable
+
+import time
+import getpass
+
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+
+
+
+
+with Device(host=hostname, user=username, password=password,timeout=300) as dev:
+    dev.timeout = 900
+    arp = ArpTable(dev)
+    arp.get() # To retrieve the arp table from the router
+    #pprint (arp.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    arp_values= (arp.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(arp_values)
+    pprint (arp.items())  # To view the complete list of items, including both keys and values, call the items() method.
+
+
+
+    bgp = bgpTable(dev)
+    bgp.get() # To retrieve the bgp neighbor information
+    pprint (bgp.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    arp_values= (bgp.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(bgp_values)
+    #pprint (bgp.items())  # To view the complete list of items, including both keys and values, call the items() method.
+	
+	
+    l2circuit = L2CircuitConnectionTable(dev)
+    l2circuit.get() # To retrieve the l2circuit information
+    pprint (l2circuit.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    l2circuit_values= (l2circuit.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(l2circuit_values)
+    #pprint (l2circuit.items())  # To view the complete list of items, including both keys and values, call the items() method.
+
+	
+    inventory = ModuleTable(dev)
+    inventory.get() # To retrieve the chassis inventory information
+    #pprint (inventory.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    inventory_values= (inventory.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(inventory_values)
+    pprint (inventory.items())  # To view the complete list of items, including both keys and values, call the items() method.
+	
+		
+	
+    ldp = LdpNeighborTable(dev)
+    ldp.get() # To retrieve the LDP neighbor information
+    #pprint (ldp.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    ldp_values= (ldp.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(ldp_values)
+    pprint (ldp.items())  # To view the complete list of items, including both keys and values, call the items() method.
+	
+
+    Route_Summ = RouteSummaryTable(dev)
+    Route_Summ.get() # To retrieve the Route Summery information
+    #pprint (Route_Summ.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    Route_Summ_values= (Route_Summ.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(Route_Summ_values)
+    pprint (Route_Summ.items())  # To view the complete list of items, including both keys and values, call the items() method.
+	
+	
+    teddb = TedTable(dev)
+    teddb.get() # To retrieve the teddb information
+    #pprint (teddb.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    ldp_values= (teddb.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(teddb_values)
+    pprint (teddb.items())  # To view the complete list of items, including both keys and values, call the items() method.
+	
+	
+    fpc = FpcHwTable(dev)
+    fpc.get() # To retrieve the fpc information
+    #pprint (fpc.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    fpc_values= (fpc.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    #pprint(fpc_values)
+    pprint (fpc.items())  # To view the complete list of items, including both keys and values, call the items() method.

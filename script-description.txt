@@ -1,0 +1,68 @@
+1
+Description: This script uses pyez library to print out device fact information. 
+#It prints this information on the screen and store it in file as well.
+
+
+2
+Description: This script uses pyez library to print out Ethernet port information. 
+
+3
+Description: This script compare increment in interface error counters during user provided monitoring period.  
+It compares two succesive data collection and provides name and value of the incremented counters.
+              
+
+4
+Description: This script use jxmlease(XML parsing library) to derive entire VPLS MAC table from the router in Python data structure.
+
+5
+Description: This script pull out the VPLS MAC database from router. 
+Script one by one compare all instances MAC tables and confirm whether or not MAC is present in them.
+
+6
+Description: This script pull out ospf neighbor in Full state and compare that against interface configured with ospf.  
+              If both of these count mismatch then appropriate message is printed by the script.
+
+7
+Description: This script compare configured ospf adjacencies vs adjacencies in Full state on List of routers. 
+
+8
+ Description: This script pull out ae bundles over which ospf neighbor in Full state. Then it pulls out
+              physical child links associated with ae bundles. It then takes two error count snapshots few second apart
+               from each of those interfaces and report back if they are getting incremented or not.
+
+9
+Description: This script commit configuration on list of routers. It uses simple template format for this purpose.
+
+10
+Description: This script perform cost-out operation of an ae bundle on two routers at the same time.
+# 
+
+11
+Description: Description: This script perform shell data collection(given list of command) from two fpc of a router. 
+
+12
+Description: This script perform shell data collection(given list of command) from fpc of a router at 30 second interval.
+#              It is a proto-type which needs to be modified to suit the production needs.
+
+13
+Description: This script pull various rpc calls to pull out various operanation and troubleshooting info from the router.
+#              It is just proto-type which needs to be modified to suit the production needs
+
+14
+Description: This script perform cost-in operation of an ae bundle on two routers at the same time.
+
+15
+Description: This script pull various pyez tables and views to pull out various operanation and troubleshooting info 
+from the router.  It is just proto-type which needs to be modified to suit the production needs
+
+16
+Description: This script demonstrate utils.config module of junos along with exception module.
+
+17
+Description: This script pulls out advertise and receive protocol of bgp from specific bgp neighbor.
+
+18
+Description: This script file system usage from the multiple routers at the same time.
+
+19
+Description: This script to compare the candidate configuration to a previously committed configuration and perform 'rollback 0' if there is difference between the two.

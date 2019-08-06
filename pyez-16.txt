@@ -1,0 +1,51 @@
+##############################################################################
+#
+# Name:   pyez-16
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script commit configuration on list of routers. It uses simple template format for this purpose.
+# 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+
+from jnpr.junos import Device 
+from jnpr.junos.utils.config import Config 
+USER = "xxxxx"
+PW = "xxxxx" 
+CONFIG_FILE = 'config.txt' 
+CONFIG_DATA = { 
+ 'dns_server': '8.8.8.8', 
+ 'ntp_server': '24.56.178.140', 
+ 'snmp_location': 'Data_center_core_rack', 
+ 'snmp_contact': 'IT_Security', 
+ 'snmp_community': 'snmprw', 
+ 'snmp_trap_recvr': '192.168.1.10' 
+}
+def config_device(devices='devices_IP.txt'): 
+ with open(devices, 'r') as f: 
+  devices_IP = f.readlines() 
+  devices_IP = [x.strip() for x in devices_IP] 
+ for router in devices_IP: 
+  dev = Device(host=router, user=USER, password=PW).open() 
+  print("Logging into the device: {}".format(router)) 
+  with Config(dev) as cu:  
+   cu.load(template_path=CONFIG_FILE, template_vars=CONFIG_DATA, format='set', merge=True) 
+   cu.commit(timeout=30) 
+  print("Committing the configuration on device: {}".format(router)) 
+  dev.close() 
+   
+if __name__ == "__main__": 
+ config_device()

@@ -1,0 +1,46 @@
+##############################################################################
+#
+# Name:   py-ez2
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script uses pyez library to print out Ethernet port information. 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+from jnpr.junos import Device
+from pprint import pprint
+from jnpr.junos.op.ethport import EthPortTable
+import getpass
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass() 
+
+     
+with Device(host=hostname, user=username, password=password) as dev:
+    eths = EthPortTable(dev)
+    eths.get()
+    for port in eths:
+        pprint ("{}: {}".format(port.name, port.oper))  # To retrieve name and operation status for all interfaces
+    pprint (eths.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    pprint (eths.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    pprint (eths.items())  # To view the complete list of items, including both keys and values, call the items() method.    
+    
+with Device(host=hostname, user=username, password=password) as dev:
+    eths1 = EthPortTable(dev)
+    eths1.get(interface_name='ge-0/3/0') # To retrieve the table item for the ge-0/3/0
+    pprint (eths1.keys())   # To view the list of dictionary keys corresponding to the Table item names, call the keys() method.
+    pprint (eths1.values()) # To view a list of the fields, or values, associated with each key, call the values() method. 
+    pprint (eths1.items())  # To view the complete list of items, including both keys and values, call the items() method.

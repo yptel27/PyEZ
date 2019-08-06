@@ -1,0 +1,67 @@
+##############################################################################
+#
+# Name:   pyez-11
+# Author: Yagnesh Patel
+# Date:   8/1/19
+# Version: 1.0
+#
+# Description: This script perform shell data collection(given list of command) from two fpc of a router. 
+# 
+#              
+#
+#    Copyright 2019 Juniper Networks, Inc. All rights reserved.
+#    Licensed under the Juniper Networks Script Software License (the "License").
+#    You may not use this script file except in compliance with the License,
+#    which is located at
+#    http://www.juniper.net/support/legal/scriptlicense/
+#    Unless required by applicable law or otherwise agreed to in writing by the
+#    parties, software distributed under the License is distributed on an "AS IS"
+#    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#    implied.
+##############################################################################
+
+from pprint import pprint
+from lxml import etree
+from jnpr.junos import Device
+from jnpr.junos.utils.config import Config
+from jnpr.junos.exception import *
+import argparse
+from jnpr.junos.utils.start_shell import StartShell
+import time
+import getpass
+
+
+start_time = time.time()
+
+hostname=input("Enter router name:  ") 
+username=input("Enter your SSH username:  ") 
+password=getpass.getpass()
+
+fpc_numbers=[0,3]
+
+time_start = time.time()
+
+DEV = Device(host=hostname, user=username, password=password,timeout=300)
+ss = StartShell(DEV)
+ss.open()
+DEV.open()
+pprint(ss.run('cli -c "set cli timestamp"'))
+for fpc_number in fpc_numbers:
+    pprint(ss.run('cprod -A fpc{} -c "show route summary"'.format(fpc_number)))
+    pprint(ss.run('cprod -A fpc{} -c "show pfe statistics traffic"'.format(fpc_number)))
+    pprint(ss.run('cprod -A fpc{} -c "show nhdb summary"'.format(fpc_number)))
+    pprint(ss.run('cprod -A fpc{} -c "show sched"'.format(fpc_number)))
+    pprint(ss.run('cprod -A fpc{} -c "show nvram"'.format(fpc_number)))
+    pprint(ss.run('cprod -A fpc{} -c "show syslog messages"'.format(fpc_number)))
+
+print("Completed data collection in %f sec." % (time.time() - time_start)) 
+DEV.close()
+ss.close()
+
+
+
+
+
+
+
+
